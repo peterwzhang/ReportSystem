@@ -26,7 +26,7 @@ public class MessageJNI {
             System.err.println("Error:"+e);
         }
     }
-    	
+    // need to implement
     public static native void writeReportRequest(int reportIdx, int reportCount, String searchString);
     public static native String readReportRecord(int qid);
 
