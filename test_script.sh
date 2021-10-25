@@ -11,11 +11,17 @@ test_project(){
 }
 
 # search all files for any concurrent parts
-# TODO: search through c files and find all concurrent keywords in java
+# TODO: add all concurrent key words to searches
 find_concurrent(){
     for fn in edu/cs300/*.java; do 
     echo "SEARCHING IN: $fn"
     grep -n "Thread" "$fn"
+    echo
+    done
+
+    for fn in *.c; do 
+    echo "SEARCHING IN: $fn"
+    grep -n "Mutex" "$fn"
     echo
     done
 }
