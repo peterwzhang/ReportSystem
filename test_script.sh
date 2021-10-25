@@ -15,15 +15,28 @@ test_project(){
 find_concurrent(){
     for fn in edu/cs300/*.java; do 
     echo "SEARCHING IN: $fn"
-    grep -n "Thread" "$fn"
+    grep -n -i "Thread" "$fn"
     echo
     done
 
     for fn in *.c; do 
     echo "SEARCHING IN: $fn"
-    grep -n "Mutex" "$fn"
+    grep -n -i "mutex" "$fn"
     echo
     done
 }
 
-find_concurrent
+select_option(){
+    echo "Choose an option: testProject or findConcurrent"
+    read -r option
+    if [ "$option" = "testProject" ] 
+    then
+    test_project
+    fi
+    if [ "$option" = "findConcurrent" ] 
+    then
+    find_concurrent
+    fi
+}
+
+select_option
