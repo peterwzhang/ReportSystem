@@ -79,3 +79,6 @@ key        semid      owner      perms      nsems
 
 >Note:  If your queue key is 0x0xffffffff, you must follow the directions to create the queue file in your home directory and update queue_ids.h
 # f21_os_project
+
+## Test scripts
+I made a test script that finds concurrent keywords and tests the program. :)

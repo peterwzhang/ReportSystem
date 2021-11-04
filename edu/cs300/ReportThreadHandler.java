@@ -14,9 +14,11 @@ that option to be open. :)
 
 public class ReportThreadHandler implements Runnable{
     int id;
+    int numReports;
     String reportFileName;
-    ReportThreadHandler(int intId, String fileName){
+    ReportThreadHandler(int intId, int reportCount, String fileName){
         id = intId;
+        numReports = reportCount;
         reportFileName =  fileName;
     }
     public void run(){
@@ -25,10 +27,18 @@ public class ReportThreadHandler implements Runnable{
             //parse specification file then write report request
             File reportSpecFile = new File(reportFileName);
             Scanner reportSpec = new Scanner(reportSpecFile);
-
             //parse here
-
-            //MessageJNI.writeReportRequest(id, reportCount, searchString);
+            Report report = new Report(reportSpec.nextLine(), reportSpec.nextLine(), reportSpec.nextLine());
+            while(reportSpec.hasNextLine()){
+                //TODO: see if we can improve this
+                String nextLine = reportSpec.nextLine();
+                if (!reportSpec.hasNextLine()){ // for last line
+                    break;
+                }
+                report.addLine(nextLine);
+            }
+            
+            MessageJNI.writeReportRequest(id, numReports, report.searchString);
             reportSpec.close();
         } catch(FileNotFoundException ex) {
 			    System.out.println("FileNotFoundException triggered:"+ex.getMessage());

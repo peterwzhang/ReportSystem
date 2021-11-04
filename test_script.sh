@@ -6,7 +6,7 @@ test_project(){
     make all
     echo "DONE BUILDING"
     # java -cp . -Djava.library.path=.edu.cs300.ReportingSystem # for server
-    java edu.cs300.ReportingSystem # for local
+    java edu.cs300.ReportingSystem # for local &
     ./process_records < data
 }
 

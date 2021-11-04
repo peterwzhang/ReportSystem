@@ -10,7 +10,7 @@ ifeq ($(UNAME_S),Linux)
 	LINK_FLAGS := -shared
 endif
 ifeq ($(UNAME_S),Darwin)
-	# for server
+	# update to work with my mac
 	# JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_111.jdk/Contents/Home
 	JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-13.0.1.jdk/Contents/Home
 	OSFLAG := darwin
