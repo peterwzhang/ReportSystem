@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <bits/pthreadtypes.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -21,18 +22,16 @@ typedef struct thread_param{
 } parameters;
 
 typedef struct condLock{
-    pthread_mutex_t mutex;
-    pthread_cond_t cond;
+    sem_t mutex;
+    sem_t cond;
     int cond_value;
 } condlock;
 
-condlock lock_data = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0}; // lock for sleep thread
+condlock lock_data;
 
 void sig_handler(int signo) {
-        pthread_mutex_lock(&lock_data.mutex);
-        lock_data.cond_value = 1;
-        pthread_cond_signal(&lock_data.cond);
-        pthread_mutex_unlock(&lock_data.mutex);
+    // sem_post required to be async-signal-safe by POSIX standards.
+    sem_post(&lock_data.cond);
 }
 
 void print_rr_buf(const report_request_buf *buffer){
@@ -51,13 +50,11 @@ void printReport(void *args){
 
 void *wait_for_signal(void *args){
     signal(SIGINT, sig_handler);
-    while (1){ // to make it work for multiple ctrl+c presses
-        pthread_mutex_lock(&lock_data.mutex);
-        while (lock_data.cond_value == 0)
-            pthread_cond_wait(&lock_data.cond, &lock_data.mutex);
+    while (!lock_data.cond_value){ // to make it work for multiple ctrl+c presses
+        sem_wait(&lock_data.cond);
+        sem_wait(&lock_data.mutex);
         printReport(args);
-        lock_data.cond_value = 0;
-        pthread_mutex_unlock(&lock_data.mutex);
+        sem_post(&lock_data.mutex);
     }
     return NULL;
 }
@@ -111,6 +108,11 @@ void sendMessage(const int msqid, report_record_buf *sbuf, const char *string){
 
 int main(int argc, char**argv)
 {
+    //TODO: add checks
+    sem_init(&lock_data.mutex, 0, 1);
+    sem_init(&lock_data.cond, 0, 0);
+    lock_data.cond_value = 0;
+
     int msqid;
     int msgflg = IPC_CREAT | 0666;
     key_t key;
@@ -147,7 +149,6 @@ int main(int argc, char**argv)
     p->size = totalCount;
     p->totalRecCount = totalRecCount;
     pthread_create(&printThread, NULL, (void*) wait_for_signal, (void*) p);
-    pthread_join(printThread, NULL);
     // hook sigint
     //signal(SIGINT, sig_handler);
 
@@ -160,23 +161,24 @@ int main(int argc, char**argv)
                 if (strstr(line, rbufArr[i].search_string) != NULL){
                     //fprintf(stderr, "%s", line);
                     //send line if match
-                    pthread_mutex_lock(&lock_data.mutex);
+                    sem_wait(&lock_data.mutex);
                     ++sentRecCount[i];
-                    pthread_mutex_unlock(&lock_data.mutex);
+                    sem_post(&lock_data.mutex);
                     updateQueueId(i + 1, &key, &msqid, msgflg);
                     sendMessage(msqid, &sbuf, line);
                 }
         }
-        pthread_mutex_lock(&lock_data.mutex);
+        sem_wait(&lock_data.mutex);
         ++(*totalRecCount);
-        pthread_mutex_unlock(&lock_data.mutex);
-        if (*totalRecCount == 10){ // TODO change back to 10 once done testing
+        //sem_post(&lock_data.mutex);
+        if (*totalRecCount == 10){
             // SIGINT will wake up the main thread, if this happens sleep returns the remaining time
             // so by storing this we can continue sleeping for the remaining time.
             // int remainingTime = sleep(5);
             // while (remainingTime != 0) remainingTime = sleep(remainingTime);
             sleep(5);
         }
+        sem_post(&lock_data.mutex);
 
     }
     char *emptyString = malloc(sizeof *emptyString);
@@ -185,7 +187,11 @@ int main(int argc, char**argv)
         updateQueueId(i + 1, &key, &msqid, msgflg);
         sendMessage(msqid, &sbuf, emptyString);
     }
-    printReport((void*) p);
+    sem_wait(&lock_data.mutex);
+    lock_data.cond_value = 1;
+    sem_post(&lock_data.cond);
+    sem_post(&lock_data.mutex);
+    pthread_join(printThread, NULL); // wait for final print to finish
     free(rbufArr);
     free(sentRecCount);
     free(totalRecCount);
