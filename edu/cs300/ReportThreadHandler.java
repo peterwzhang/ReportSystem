@@ -5,13 +5,6 @@ import java.io.FileNotFoundException;
 import java.lang.Runnable;
 import java.util.Scanner;
 
-/*
-I decided to use implements runnable instead of extends thread
-since I think this project is very interesting. In the case I
-want ReportThreadHandler to inherit another class I would like
-that option to be open. :)
- */
-
 public class ReportThreadHandler implements Runnable{
     int id;
     int numReports;
@@ -35,11 +28,18 @@ public class ReportThreadHandler implements Runnable{
                 if (!reportSpec.hasNextLine()){ // for last line
                     break;
                 }
-                report.addLine(nextLine);
+                report.addCol(nextLine);
             }
-            
-            MessageJNI.writeReportRequest(id, numReports, report.searchString);
             reportSpec.close();
+
+            MessageJNI.writeReportRequest(id, numReports, report.searchString);
+            while (true){
+                String readString = MessageJNI.readReportRecord(id);
+                //DebugLog.log("read string: " +readString);
+                if (readString.isEmpty()){ break; }
+                report.addLine(readString);
+            }
+            report.printReport();
         } catch(FileNotFoundException ex) {
 			    System.out.println("FileNotFoundException triggered:"+ex.getMessage());
         };
