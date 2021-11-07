@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.util.Vector;
 
 public class Report{
-    String reportTitle;
-    String searchString;
-    String outputFName;
-    Vector<ColumnField> colFields;
-    Vector<String> lines;
+    private String reportTitle;
+    private String searchString;
+    private String outputFName;
+    private Vector<ColumnField> colFields;
+    private Vector<String> lines;
 
-    Report(String lOne, String lTwo, String lThree){
+    public Report(String lOne, String lTwo, String lThree){
         reportTitle = lOne;
         searchString = lTwo;
         outputFName = lThree;
@@ -20,7 +20,11 @@ public class Report{
         DebugLog.log("created " + lOne + "\n" + lTwo + '\n' + lThree);
     }
 
-    void addCol(String line){
+    public String getSearchString(){
+        return searchString;
+    }
+
+    public void addCol(String line){
         int dashIndex = line.indexOf('-');
         int commaIndex = line.indexOf(',');
         int startIndex, endIndex;
@@ -39,17 +43,17 @@ public class Report{
         colFields.add(cF);
     }
 
-    void addLine(String line){
+    public void addLine(String line){
         String newLine = new String();
         for (ColumnField col : colFields){
-            String newCol = line.substring(col.startIndex - 1, col.endIndex);
+            String newCol = line.substring(col.getStartIndex(), col.getEndIndex());
             newCol = newCol+ '\t';
             newLine += newCol;
         }
         lines.add(newLine + '\n');
     }
 
-    void printReport(){
+    public void printReport(){
         try {
         FileWriter fw = new FileWriter(outputFName);
         fw.write(reportTitle + '\n');

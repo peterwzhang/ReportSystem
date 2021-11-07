@@ -27,15 +27,12 @@ typedef struct condLock{
 } condlock;
 
 condlock lock_data = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0}; // lock for sleep thread
-pthread_mutex_t main_mutex = PTHREAD_MUTEX_INITIALIZER; // lock for main thread
 
 void sig_handler(int signo) {
-    if (signo == SIGINT) {
         pthread_mutex_lock(&lock_data.mutex);
         lock_data.cond_value = 1;
         pthread_cond_signal(&lock_data.cond);
         pthread_mutex_unlock(&lock_data.mutex);
-    }
 }
 
 void print_rr_buf(const report_request_buf *buffer){
@@ -53,14 +50,16 @@ void printReport(void *args){
 }
 
 void *wait_for_signal(void *args){
+    signal(SIGINT, sig_handler);
     while (1){ // to make it work for multiple ctrl+c presses
         pthread_mutex_lock(&lock_data.mutex);
         while (lock_data.cond_value == 0)
             pthread_cond_wait(&lock_data.cond, &lock_data.mutex);
         printReport(args);
+        lock_data.cond_value = 0;
         pthread_mutex_unlock(&lock_data.mutex);
-        return NULL;
     }
+    return NULL;
 }
 
 void updateQueueId(const int queueNum, key_t *key, int *msqid, const int msgflg){
@@ -69,7 +68,6 @@ void updateQueueId(const int queueNum, key_t *key, int *msqid, const int msgflg)
         fprintf(stderr,"Key cannot be 0xffffffff..fix queue_ids.h to link to existing file\n");
         exit(1);
     }
-
     if ((*msqid = msgget(*key, msgflg)) < 0) {
         int errnum = errno;
         fprintf(stderr, "Value of errno: %d\n", errno);
@@ -116,17 +114,16 @@ int main(int argc, char**argv)
     int msqid;
     int msgflg = IPC_CREAT | 0666;
     key_t key;
-    report_request_buf rbuf;
-    report_record_buf sbuf;
+    report_request_buf *rbufArr = malloc(sizeof *rbufArr);
+    assert(rbufArr != NULL);
 
     updateQueueId(QUEUE_NUMBER, &key, &msqid, msgflg);
-    getMessage(msqid, &rbuf);
+    getMessage(msqid, rbufArr);
 
     //print_rr_buf(&rbuf);
-    int totalCount = rbuf.report_count;
-    report_request_buf rbufArr[totalCount];
-    //TODO: copy the first rbuf in here; improve copy? avoid maybe? do we need to copy string inside struct?
-    memcpy(&rbufArr[0], &rbuf, sizeof(rbuf));
+    int totalCount = rbufArr->report_count;
+    rbufArr = realloc(rbufArr, totalCount * (sizeof *rbufArr));
+    assert(rbufArr != NULL);
     for (int i = 1; i < totalCount; ++i){ // get the rest of the messages
         getMessage(msqid, &rbufArr[i]);
     }
@@ -141,37 +138,43 @@ int main(int argc, char**argv)
 
     // create our printing thread
     pthread_t printThread;
-    int *totalRecCount = calloc(1, sizeof *totalRecCount);
+    int *totalRecCount = malloc(sizeof *totalRecCount);
     assert(totalRecCount!= NULL);
+    *totalRecCount = 0;
     parameters *p = malloc(sizeof *p);
     assert(p != NULL);
     p->recordCounts = sentRecCount;
     p->size = totalCount;
     p->totalRecCount = totalRecCount;
-    pthread_create(&printThread, NULL, (void*) wait_for_signal, (void*) &p);
-
+    pthread_create(&printThread, NULL, (void*) wait_for_signal, (void*) p);
+    pthread_join(printThread, NULL);
     // hook sigint
-    signal(SIGINT, sig_handler);
+    //signal(SIGINT, sig_handler);
 
     // scan stdin for requested words
     char line[RECORD_MAX_LENGTH];
+    report_record_buf sbuf; // buffer to store our messages to send
     //int sentRecCount[totalCount];
     while (fgets(line, RECORD_MAX_LENGTH, stdin)){
             for (int i = 0; i < totalCount; ++i){
                 if (strstr(line, rbufArr[i].search_string) != NULL){
                     //fprintf(stderr, "%s", line);
                     //send line if match
-                    //pthread_mutex_lock(&main_mutex);
+                    pthread_mutex_lock(&lock_data.mutex);
                     ++sentRecCount[i];
-                    //pthread_mutex_unlock(&main_mutex);
+                    pthread_mutex_unlock(&lock_data.mutex);
                     updateQueueId(i + 1, &key, &msqid, msgflg);
                     sendMessage(msqid, &sbuf, line);
                 }
         }
-        //pthread_mutex_lock(&main_mutex);
+        pthread_mutex_lock(&lock_data.mutex);
         ++(*totalRecCount);
-        //pthread_mutex_unlock(&main_mutex);
+        pthread_mutex_unlock(&lock_data.mutex);
         if (*totalRecCount == 10){ // TODO change back to 10 once done testing
+            // SIGINT will wake up the main thread, if this happens sleep returns the remaining time
+            // so by storing this we can continue sleeping for the remaining time.
+            // int remainingTime = sleep(5);
+            // while (remainingTime != 0) remainingTime = sleep(remainingTime);
             sleep(5);
         }
 
@@ -179,10 +182,14 @@ int main(int argc, char**argv)
     char *emptyString = malloc(sizeof *emptyString);
     emptyString[0] = 0;
     for (int i = 0; i < totalCount; ++i){
-        fprintf(stderr, "%d", i);
         updateQueueId(i + 1, &key, &msqid, msgflg);
         sendMessage(msqid, &sbuf, emptyString);
     }
     printReport((void*) p);
+    free(rbufArr);
+    free(sentRecCount);
+    free(totalRecCount);
+    free(p);
+    free(emptyString);
     exit(0); // return from main thread will kill all child threads
 }

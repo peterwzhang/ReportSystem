@@ -41,7 +41,7 @@ public class ReportingSystem {
 
 			    reportList.close();
 		} catch (FileNotFoundException ex) {
-			    System.out.println("FileNotFoundException triggered:"+ex.getMessage());
+                System.exit(1); // exit gracefully if files DNE
 		}
 		return reportCounter;
 

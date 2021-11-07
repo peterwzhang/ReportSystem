@@ -6,13 +6,31 @@ import java.lang.Runnable;
 import java.util.Scanner;
 
 public class ReportThreadHandler implements Runnable{
-    int id;
-    int numReports;
-    String reportFileName;
-    ReportThreadHandler(int intId, int reportCount, String fileName){
+    private int id;
+    private int numReports;
+    private String reportFileName;
+    public ReportThreadHandler(int intId, int reportCount, String fileName){
         id = intId;
         numReports = reportCount;
         reportFileName =  fileName;
+    }
+    public void setId(int newId){
+        id = newId;
+    }
+    public void setNumReports(int newNum){
+        numReports = newNum;
+    }
+    public void setRepFileName(String newName){
+        reportFileName = newName;
+    }
+    public int getId(){
+        return id;
+    }
+    public int getNumReports(){
+        return numReports;
+    }
+    public String getRepFileName(){
+        return reportFileName;
     }
     public void run(){
         System.out.println("Created thread ID: " + id + " for report: " + reportFileName); // change to stderr printing later
@@ -32,7 +50,7 @@ public class ReportThreadHandler implements Runnable{
             }
             reportSpec.close();
 
-            MessageJNI.writeReportRequest(id, numReports, report.searchString);
+            MessageJNI.writeReportRequest(id, numReports, report.getSearchString());
             while (true){
                 String readString = MessageJNI.readReportRecord(id);
                 //DebugLog.log("read string: " +readString);
@@ -41,7 +59,7 @@ public class ReportThreadHandler implements Runnable{
             }
             report.printReport();
         } catch(FileNotFoundException ex) {
-			    System.out.println("FileNotFoundException triggered:"+ex.getMessage());
+			    System.exit(1); // exit gracefully if files DNE
         };
     }
 }
