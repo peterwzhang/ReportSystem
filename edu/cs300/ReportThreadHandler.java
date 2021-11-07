@@ -12,7 +12,7 @@ public class ReportThreadHandler implements Runnable{
     public ReportThreadHandler(int intId, int reportCount, String fileName){
         id = intId;
         numReports = reportCount;
-        reportFileName =  fileName;
+        reportFileName = fileName;
     }
     public void setId(int newId){
         id = newId;
@@ -33,31 +33,29 @@ public class ReportThreadHandler implements Runnable{
         return reportFileName;
     }
     public void run(){
-        System.out.println("Created thread ID: " + id + " for report: " + reportFileName); // change to stderr printing later
+        //DebugLog.log("Created thread ID: " + id + " for report: " + reportFileName); // change to stderr printing later
         try {
             //parse specification file then write report request
             File reportSpecFile = new File(reportFileName);
             Scanner reportSpec = new Scanner(reportSpecFile);
             //parse here
+            // store report title, search string, and output file name
             Report report = new Report(reportSpec.nextLine(), reportSpec.nextLine(), reportSpec.nextLine());
-            while(reportSpec.hasNextLine()){
-                //TODO: see if we can improve this
+            while(reportSpec.hasNextLine()){ // store each column header
                 String nextLine = reportSpec.nextLine();
-                if (!reportSpec.hasNextLine()){ // for last line
-                    break;
-                }
                 report.addCol(nextLine);
             }
             reportSpec.close();
-
+            // send our request
             MessageJNI.writeReportRequest(id, numReports, report.getSearchString());
-            while (true){
+            while (true){ // get records back
                 String readString = MessageJNI.readReportRecord(id);
                 //DebugLog.log("read string: " +readString);
                 if (readString.isEmpty()){ break; }
                 report.addLine(readString);
             }
             report.printReport();
+
         } catch(FileNotFoundException ex) {
 			    System.exit(1); // exit gracefully if files DNE
         };

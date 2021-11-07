@@ -24,6 +24,7 @@ public class Report{
         return searchString;
     }
 
+    // this method assumes report spec files are corectly formatted as per the project pdf
     public void addCol(String line){
         int dashIndex = line.indexOf('-');
         int commaIndex = line.indexOf(',');
@@ -31,7 +32,6 @@ public class Report{
         String name = line.substring(commaIndex + 1);
         ColumnField cF = new ColumnField();
         try {
-            // this assumes the report files will always be valid
             startIndex = Integer.parseInt(line.substring(0, dashIndex));
             endIndex = Integer.parseInt(line.substring(dashIndex + 1, commaIndex));
             cF = new ColumnField(startIndex, endIndex, name);
@@ -76,7 +76,7 @@ public class Report{
         //DebugLog.log("printed " + outputFName);
         }
         catch (IOException e){
-            //TODO: implement
+            System.exit(1);
         }
     }
 }
