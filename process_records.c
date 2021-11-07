@@ -63,7 +63,7 @@ void *wait_for_signal(void *args){
     }
 }
 
-void updateKey(const int queueNum, key_t *key, int *msqid, const int msgflg){
+void updateQueueId(const int queueNum, key_t *key, int *msqid, const int msgflg){
     *key = ftok(FILE_IN_HOME_DIR, queueNum);
     if (*key == 0xffffffff) {
         fprintf(stderr,"Key cannot be 0xffffffff..fix queue_ids.h to link to existing file\n");
@@ -83,7 +83,7 @@ void updateKey(const int queueNum, key_t *key, int *msqid, const int msgflg){
 void getMessage(const int msqid, report_request_buf *rbuf){
     int ret;
     do {
-        ret = msgrcv(msqid, &rbuf, sizeof(*rbuf), 1, 0);//receive type 1 message
+        ret = msgrcv(msqid, rbuf, sizeof(*rbuf), 1, 0);//receive type 1 message
         int errnum = errno;
         if (ret < 0 && errno !=EINTR){
             fprintf(stderr, "Value of errno: %d\n", errno);
@@ -99,7 +99,7 @@ void sendMessage(const int msqid, report_record_buf *sbuf, const char *string){
     strcpy(sbuf->record, string); 
     size_t buf_length = strlen(sbuf->record) + sizeof(int)+1;//struct size without
     // Send a message.
-    if((msgsnd(msqid, &sbuf, buf_length, IPC_NOWAIT)) < 0) {
+    if((msgsnd(msqid, sbuf, buf_length, IPC_NOWAIT)) < 0) {
         int errnum = errno;
         fprintf(stderr,"%d, %ld, %s %d\n", msqid, sbuf->mtype, sbuf->record, (int)buf_length);
         perror("(msgsnd)");
@@ -118,52 +118,17 @@ int main(int argc, char**argv)
     key_t key;
     report_request_buf rbuf;
     report_record_buf sbuf;
-    size_t buf_length;
 
-    int key_len;
-    key = ftok(FILE_IN_HOME_DIR,QUEUE_NUMBER);
-    if (key == 0xffffffff) {
-        fprintf(stderr,"Key cannot be 0xffffffff..fix queue_ids.h to link to existing file\n");
-        return 1;
-    }
+    updateQueueId(QUEUE_NUMBER, &key, &msqid, msgflg);
+    getMessage(msqid, &rbuf);
 
-    if ((msqid = msgget(key, msgflg)) < 0) {
-        int errnum = errno;
-        fprintf(stderr, "Value of errno: %d\n", errno);
-        perror("(msgget)");
-        fprintf(stderr, "Error msgget: %s\n", strerror( errnum ));
-    }
-    else
-        fprintf(stderr, "msgget: msgget succeeded: msgqid = %d\n", msqid);
-
-    // msgrcv to receive report request
-    int ret;
-    do { // get the first message
-      ret = msgrcv(msqid, &rbuf, sizeof(rbuf), 1, 0);//receive type 1 message
-      int errnum = errno;
-      if (ret < 0 && errno !=EINTR){
-        fprintf(stderr, "Value of errno: %d\n", errno);
-        perror("Error printed by perror");
-        fprintf(stderr, "Error receiving msg: %s\n", strerror( errnum ));
-      }
-    } while ((ret < 0 ) && (errno == 4)); // go until it does not fail; 4 == EINTR == interrupted system call
     //print_rr_buf(&rbuf);
     int totalCount = rbuf.report_count;
     report_request_buf rbufArr[totalCount];
     //TODO: copy the first rbuf in here; improve copy? avoid maybe? do we need to copy string inside struct?
     memcpy(&rbufArr[0], &rbuf, sizeof(rbuf));
     for (int i = 1; i < totalCount; ++i){ // get the rest of the messages
-        do {
-        ret = msgrcv(msqid, &rbufArr[i], sizeof(rbuf), 1, 0);//receive type 1 message
-
-        int errnum = errno;
-        if (ret < 0 && errno !=EINTR){
-            fprintf(stderr, "Value of errno: %d\n", errno);
-            perror("Error printed by perror");
-            fprintf(stderr, "Error receiving msg: %s\n", strerror( errnum ));
-        }
-        } while ((ret < 0 ) && (errno == 4)); // go until it does not fail; 4 == EINTR == interrupted system call
-        //print_rr_buf(&rbufArr[i]);
+        getMessage(msqid, &rbufArr[i]);
     }
 
     for (int i = 0; i < totalCount; ++i){
@@ -199,66 +164,24 @@ int main(int argc, char**argv)
                     //pthread_mutex_lock(&main_mutex);
                     ++sentRecCount[i];
                     //pthread_mutex_unlock(&main_mutex);
-
-                    key = ftok(FILE_IN_HOME_DIR, i + 1);
-
-                    if ((msqid = msgget(key, msgflg)) < 0) {
-                    int errnum = errno;
-                    fprintf(stderr, "Value of errno: %d\n", errno);
-                    perror("(msgget)");
-                    fprintf(stderr, "Error msgget: %s\n", strerror( errnum ));
-                    }
-                    else
-                        fprintf(stderr, "msgget: msgget succeeded: msgqid = %d\n", msqid);
-
-                    sbuf.mtype = 2;
-                    strcpy(sbuf.record, line); 
-                    buf_length = strlen(sbuf.record) + sizeof(int)+1;//struct size without
-                    // Send a message.
-                    if((msgsnd(msqid, &sbuf, buf_length, IPC_NOWAIT)) < 0) {
-                        int errnum = errno;
-                        fprintf(stderr,"%d, %ld, %s %d\n", msqid, sbuf.mtype, sbuf.record, (int)buf_length);
-                        perror("(msgsnd)");
-                        fprintf(stderr, "Error sending msg: %s\n", strerror( errnum ));
-                        exit(1);
-                    }
-                    else
-                        fprintf(stderr,"msgsnd-report_record: record\"%s\" Sent (%d bytes)\n", sbuf.record,(int)buf_length);
-
+                    updateQueueId(i + 1, &key, &msqid, msgflg);
+                    sendMessage(msqid, &sbuf, line);
                 }
         }
         //pthread_mutex_lock(&main_mutex);
         ++(*totalRecCount);
         //pthread_mutex_unlock(&main_mutex);
-        if (*totalRecCount == 5){ // TODO change back to 10 once done testing
+        if (*totalRecCount == 10){ // TODO change back to 10 once done testing
             sleep(5);
         }
 
     }
+    char *emptyString = malloc(sizeof *emptyString);
+    emptyString[0] = 0;
     for (int i = 0; i < totalCount; ++i){
-        key = ftok(FILE_IN_HOME_DIR, i + 1);
-        if ((msqid = msgget(key, msgflg)) < 0) {
-        int errnum = errno;
-        fprintf(stderr, "Value of errno: %d\n", errno);
-        perror("(msgget)");
-        fprintf(stderr, "Error msgget: %s\n", strerror( errnum ));
-        }
-        else
-            fprintf(stderr, "msgget: msgget succeeded: msgqid = %d\n", msqid);
-
-        sbuf.mtype = 2;
-        sbuf.record[0] = 0; 
-        buf_length = strlen(sbuf.record) + sizeof(int)+1;//struct size without
-        // Send a message.
-        if((msgsnd(msqid, &sbuf, buf_length, IPC_NOWAIT)) < 0) {
-            int errnum = errno;
-            fprintf(stderr,"%d, %ld, %s %d\n", msqid, sbuf.mtype, sbuf.record, (int)buf_length);
-            perror("(msgsnd)");
-            fprintf(stderr, "Error sending msg: %s\n", strerror( errnum ));
-            exit(1);
-        }
-        else
-            fprintf(stderr,"msgsnd-report_record: record\"%s\" Sent (%d bytes)\n", sbuf.record,(int)buf_length);
+        fprintf(stderr, "%d", i);
+        updateQueueId(i + 1, &key, &msqid, msgflg);
+        sendMessage(msqid, &sbuf, emptyString);
     }
     printReport((void*) p);
     exit(0); // return from main thread will kill all child threads

@@ -36,7 +36,7 @@ public class ReportingSystem {
                 for (int index = 0; index < reportCounter; ++index){
                     ReportThreadHandler RTH = new ReportThreadHandler(index + 1, reportCounter, reportNames.elementAt(index));
                     Thread rthThread = new Thread(RTH);
-                    rthThread.run();
+                    rthThread.start();
                 }
 
 			    reportList.close();
