@@ -1,0 +1,8 @@
+RateMyProfessor report: one person
+Bombina
+oneperson.rpt
+13-23,First
+1-12,Last
+25-36,Dept
+37-40,Rtn
+41-47,Reviews

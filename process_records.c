@@ -1,6 +1,5 @@
 //#define _GNU_SOURCE // remove this, its included in compile command
 #include <assert.h>
-#include <bits/pthreadtypes.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
@@ -56,7 +55,6 @@ int main(int argc, char**argv)
     // get the first record request
     updateQueueId(QUEUE_NUMBER, &key, &msqid, msgflg);
     getMessage(msqid, rbufArr);
-
     //printRRBuf(&rbuf); debug print
 
     //resize rbufArr to hold all record requests, then scan in the rest of the requests
@@ -206,6 +204,8 @@ void getMessage(const int msqid, report_request_buf *rbuf){
         }
         } while ((ret < 0 ) && (errno == 4)); // go until it does not fail; 4 == EINTR == interrupted system call
         //printRRBuf(rbuf);
+    fprintf(stderr,"process-msgrcv-request: msg type-%ld, Record %d of %d: %s ret/bytes rcv'd=%d\n", rbuf->mtype, rbuf->report_idx,rbuf->report_count,rbuf->search_string, ret);
+    
 }
 
 void sendMessage(const int msqid, report_record_buf *sbuf, const char *string){

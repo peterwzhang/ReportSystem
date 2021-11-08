@@ -1,6 +1,6 @@
-RateMyProfessor report: Classics
-Classics
-classics.rpt
+RateMyProfessor report: Computer Science
+Comp Sci
+cs.rpt
 1-12,Last
 13-23,First
 25-36,Dept
