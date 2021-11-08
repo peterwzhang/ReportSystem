@@ -1,5 +1,5 @@
 RateMyProfessor report: Engineering
-Engineering
+Engineer
 engineering.rpt
 1-12,Last
 13-23,First

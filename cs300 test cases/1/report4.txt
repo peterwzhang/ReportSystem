@@ -1,5 +1,5 @@
 RateMyProfessor report: Computer Science
-Computer Science
+Comp Sci
 cs.rpt
 1-12,Last
 13-23,First

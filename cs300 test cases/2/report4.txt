@@ -1,5 +1,5 @@
 Food Report: Panda Express
-Panda Express
+PandaExpr
 pandaexpress.rpt
 1-12,Restaurant
 17-31,Item
