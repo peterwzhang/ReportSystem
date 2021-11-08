@@ -17,11 +17,31 @@ public class Report{
         outputFName = lThree;
         colFields = new Vector<ColumnField>();
         lines = new Vector<String>();
-        DebugLog.log("created " + lOne + "\n" + lTwo + '\n' + lThree);
+        //DebugLog.log("created " + lOne + "\n" + lTwo + '\n' + lThree);
+    }
+
+    public void setReportTitle(String rt){
+        reportTitle = rt;
+    }
+
+    public String getReportTitle(){
+        return reportTitle;
+    }
+
+    public void setSearchString(String ss){
+        searchString = ss;
     }
 
     public String getSearchString(){
         return searchString;
+    }
+
+    public void setFileName(String fn){
+        outputFName = fn;
+    }
+
+    public String getFileName(){
+        return outputFName;
     }
 
     // this method assumes report spec files are corectly formatted as per the project pdf
@@ -37,9 +57,9 @@ public class Report{
             cF = new ColumnField(startIndex, endIndex, name);
         }
         catch (NumberFormatException e) {
-            //TODO: handle this
+            System.exit(1);
         }
-        DebugLog.log(cF.toString());
+        //DebugLog.log(cF.toString());
         colFields.add(cF);
     }
 
@@ -61,7 +81,7 @@ public class Report{
         // print column header
         String colString = new String();
         for (ColumnField col : colFields){
-            colString += col.name;
+            colString += col.getName();
             colString += '\t';
         }
         colString += '\n';

@@ -4,7 +4,7 @@ package edu.cs300;
 public class ColumnField {
     private int startIndex;
     private int endIndex;
-    String name;
+    private String name;
 
     public ColumnField(){
         startIndex = 0;
@@ -26,6 +26,10 @@ public class ColumnField {
         endIndex = index;
     }
 
+    public void setName(String n){
+        name = n;
+    }
+
     public int getStartIndex(){
         if (startIndex <= 0) return 0;
         return startIndex - 1; //indices on report spec start at 1 but string index start at 0
@@ -35,6 +39,11 @@ public class ColumnField {
         if (endIndex <= 0) return 0;
         return endIndex; // substring uses exclusive for the end index so we don't need to subtract 1
     }
+
+    public String getName(){
+        return name;
+    }
+
     @Override
     public String toString(){
         return String.format("S: %d, E: %d, Name: %s\n", startIndex, endIndex, name);
