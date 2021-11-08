@@ -36,6 +36,7 @@ public class ReportingSystem {
                     ReportThreadHandler RTH = new ReportThreadHandler(index + 1, reportCounter, reportNames.elementAt(index));
                     Thread rthThread = new Thread(RTH);
                     rthThread.start();
+                    // each thread has its own variables + file; yay!!!
                 }
 
 			    reportList.close();

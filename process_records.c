@@ -27,6 +27,7 @@ typedef struct condLock{
     int cond_value;
 } condlock;
 
+int cmp(const void* a, const void* b);
 void hookSignal();
 void sigHandler(int signo);
 void printRRBuf(const report_request_buf *buffer);
@@ -64,11 +65,13 @@ int main(int argc, char**argv)
     for (int i = 1; i < totalCount; ++i){
         getMessage(msqid, &rbufArr[i]);
     }
-
     // debug print
     // for (int i = 0; i < totalCount; ++i){
     //     printRRBuf(&rbufArr[i]);
     // }
+
+    //sort our array based on thread ids
+    qsort(rbufArr, totalCount, sizeof(*rbufArr), cmp);
 
     // set up shared array on heap, for the number of records to be sent per queue
     int *sentRecCount = calloc(totalCount, sizeof *sentRecCount);
@@ -98,7 +101,7 @@ int main(int argc, char**argv)
                     sem_wait(&lock_data.mutex);
                     ++sentRecCount[i];
                     sem_post(&lock_data.mutex);
-                    updateQueueId(i + 1, &key, &msqid, msgflg);
+                    updateQueueId(rbufArr[i].report_idx, &key, &msqid, msgflg);
                     sendMessage(msqid, &sbuf, line);
                 }
         }
@@ -133,6 +136,14 @@ int main(int argc, char**argv)
     free(p);
     free(emptyString);
     exit(0);
+}
+
+int cmp(const void* a, const void* b){
+    const report_request_buf *aP = (report_request_buf *)a;
+    const report_request_buf *bP = (report_request_buf *)b;
+    if (aP->report_idx < bP->report_idx) return -1;
+    else if (aP->report_idx > bP->report_idx) return 1;
+    return 0;
 }
 
 void hookSignal(){

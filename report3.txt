@@ -1,8 +1,0 @@
-RateMyProfessor report: High ratings
-4.5
-highrating.rpt
-1-12,Last
-13-23,First
-25-36,Dept
-37-40,Rtn
-41-47,Reviews

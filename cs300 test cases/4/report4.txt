@@ -1,8 +1,8 @@
-RateMyProfessor report: Computer Science
+RMP report: Computer Science
 Comp Sci
 cs.rpt
 1-12,Last
 13-23,First
 25-36,Dept
 37-40,Rtn
-41-47,Reviews
+41-43,Reviews

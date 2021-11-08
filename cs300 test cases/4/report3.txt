@@ -1,9 +1,8 @@
-Date Report
-09/22/21
-datereport.rpt
-1-8,Tran Date
-11-21,Transaction
-32-39,Customer
-64-69,$Labor
-52-56,$Part
-71-75,Total
+RMP report: High ratings
+4.5
+highrating.rpt
+1-12,Last
+13-23,First
+25-36,Dept
+37-40,Rtn
+41-43,Reviews
