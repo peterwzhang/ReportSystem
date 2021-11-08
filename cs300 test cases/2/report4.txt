@@ -1,0 +1,19 @@
+Food Report: Panda Express
+Panda Express
+pandaexpress.rpt
+1-12,Restaurant
+17-31,Item
+33-40,Calories
+45-51,Cal_Fat
+53-61,Total_Fat
+65-71,Sat_Fat
+73-81,Trans_Fat
+85-95,Cholesterol
+97-102,Sodium
+105-114,Total_Carb
+117-121,Fiber
+125-129,Sugar
+133-139,Protein
+141-145,Vit_A
+149-153,Vit_C
+157-163,Calcium

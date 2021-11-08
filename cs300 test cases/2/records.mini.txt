@@ -1,0 +1,14 @@
+Mcdonalds       Big Mac         540         250     28          10      1           80          950     46          3       9       25      10      2       15
+Mcdonalds	    Hamburger	    250	        70	    8	        3	    0	        30	        480	    31	        2	    6	    13	    2	    2	    4
+Mcdonalds	    McRib	        480	        200	    22	        7	    0	        80	        870	    45	        2	    12	    25	    2	    2	    6
+Chick Fil-A	    Spicy Deluxe	540	        225	    25	        8	    0	        80	        1760	43	        2	    6	    34	    30	    10	    30
+Chick Fil-A	    30 Nuggets	    970	        414	    46	        2.5	    0	        285	        3660	35	        4	    1	    103	    NA	    20	    10
+Subway	        Cheese Pizza	680	        200	    22	        9	    0	        40	        1070	96	        4	    7	    32	    25	    4	    45
+Subway	        Footlong Tuna	940	        420	    48	        8	    0	        60	        1240	88	        10	    12	    40	    16	    40	    60
+Subway	        Footlong B.L.T.	640	        160	    18	        8	    0	        40	        1360	86	        10	    12	    30	    16	    16	    60
+Dairy Queen	    Corn Dog	    260	        140	    15	        4	    0	        20	        450	    26	        1	    7	    6	    0	    4	    0
+Taco Bell	    7-Layer Burrito	510	        170	    19	        7	    0	        20	        1090	68	        11	    4	    16	    NA	    NA	    NA
+Taco Bell	    Bean Burrito	370	        100	    11	        4	    0	        5	        960	    56	        9	    3	    13	    NA	    NA	    NA
+Arbys	        Pizza Slider	300	        150	    17	        6	    0	        35	        930	    23	        1	    2	    13	    NA	    NA	    NA
+Sonic	        Corn Dog	    210	        100	    11	        4	    0	        20	        530	    23	        2	    4	    6	    0	    0	    4
+Burger King	    Hamburger	    260	        90	    10	        4	    0	        35	        490	    28	        1	    6	    13	    NA	    NA	    NA

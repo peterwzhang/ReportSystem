@@ -1,0 +1,3 @@
+09/22/21  Fix Flat     Repair  H Walter    SSmith  $0    0.5   $20    $20   
+09/22/21  Windshield   Repair  H Peck      JJDoe   $400  1.5   $60    $460   
+09/22/21  Oil Change   Repair  H Lovell    SSmith  $45   2     $80    $125 
